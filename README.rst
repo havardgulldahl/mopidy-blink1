@@ -39,7 +39,7 @@ Before starting Mopidy, you must add configuration for
 Mopidy-Blink1 to your Mopidy configuration file::
 
     [blink1]
-    # TODO: Add example of extension config
+    enabled = True
 
 
 Project resources
