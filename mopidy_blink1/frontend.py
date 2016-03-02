@@ -12,18 +12,21 @@ from mopidy.core import PlaybackState
 
 logger = logging.getLogger(__name__)
 
-from blink1.blink1 import blink1 # pip install blink1, from https://github.com/todbot/blink1/tree/master/python/pypi
+from blink1py import open_blink1 # pip install blink1py, https://github.com/TronPaul/blink1py
 
 class Blink1Frontend(pykka.ThreadingActor, CoreListener):
     def __init__(self, config, core):
         super(Blink1Frontend, self).__init__()
         self.core = core
         self.config = config['blink1']
-        self.b1 = blink1()
+        self.b1 = open_blink1()
         self.looping = False
 
     def on_start(self):
         logger.debug('extension startup')
+        #preprogram led
+        self.b1.set_pattern(0, 0,   255, 255, 1000)
+        self.b1.set_pattern(1, 0,   127, 255, 1000)
 
     def on_stop(self):
         logger.debug('extension teardown')
@@ -54,19 +57,14 @@ class Blink1Frontend(pykka.ThreadingActor, CoreListener):
         """
         logger.debug('Playback_state_changed(old, new): (%r, %r)', old_state, new_state)
         self.looping = False # clear any prev state feedback (like blinks)
+        self.stop()
 
         if new_state == PlaybackState.STOPPED:
-            self.b1.fade_to_color(100, 'navy')
-            time.sleep(10)
+            self.b1.fade_rgb(0,0,100, 1000)
         elif new_state == PlaybackState.PLAYING:
-            self.b1.fade_to_color(1000, 'green')
+            self.b1.fade_rgb(127,255,0, 1000) # PaleGreen
         elif new_state == PlaybackState.PAUSED:
-            self.looping = True
-            while self.looping:
-                self.b1.fade_to_color(1000, 'green')
-                time.sleep(1)
-                self.b1.fade_to_color(1000, 'light green')
-                time.sleep(1)
+            self.play()
     
     
 
